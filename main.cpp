@@ -48,12 +48,17 @@ int main(int argc, char * argv[]) {
 	delete[] buff;
 
 	long long brackets = 0;
-	// FIXME : Nope out when brackets < -1, 'cause it means we've got a closing before its opening
 	// Here we simply parse the string using i as index and nest ternary operators to modify 'brackets'
-	for (size_t i = 0; i <= length; brackets += (moo[i] == '[' ? 1 : (moo[i] == ']' ? -1 : 0))) i++;
+	for (size_t i = 0; i <= length; brackets += (moo[i] == '[' ? 1 : (moo[i] == ']' ? -1 : 0))) {
+		i++;
+		if (brackets < 0) {
+			std::cerr << "ERROR : Closing bracket before its opening counterpart" << std::endl;
+			return -1;
+		}
+	}
 
 	if (brackets) {
-		std::cerr << "ERROR : Expected " << (brackets<0?"opening":"closing") << " bracket" << std::endl;
+		std::cerr << "ERROR : Expected closing bracket" << std::endl;
 		return 1;
 	}
 
