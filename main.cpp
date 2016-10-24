@@ -14,7 +14,7 @@
 #include <thread>
 #include <chrono>
 
-#define VERSION 1.0
+#define VERSION 1.1
 
 int main(int argc, char * argv[]) {
 	if (argc == 1) {
@@ -49,8 +49,8 @@ int main(int argc, char * argv[]) {
 
 	long long brackets = 0;
 	// Here we simply parse the string using i as index and nest ternary operators to modify 'brackets'
-	for (size_t i = 0; i <= length; brackets += (moo[i] == '[' ? 1 : (moo[i] == ']' ? -1 : 0))) {
-		i++;
+	for (size_t i = 0; i <= length; i++) {
+		brackets += (moo[i] == '[' ? 1 : (moo[i] == ']' ? -1 : 0));
 		if (brackets < 0) {
 			std::cerr << "ERROR : Closing bracket before its opening counterpart" << std::endl;
 			return -1;
