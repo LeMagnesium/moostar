@@ -103,7 +103,7 @@ int main(int argc, char * argv[]) {
 			case ',': {
 					char k = ' ';
 					std::cin.get(k);
-					memory[pointer] = (std::cin.eof() | std::cin.fail() ? -1 : (int)(k)); 
+					memory[pointer] = (std::cin.eof() | std::cin.fail() ? memory[pointer] : (int)(k));
 					break;
 				}
 			// Arithmetic

@@ -27,5 +27,4 @@ Example from Wikipedia
     <.[-]                    Output ROT13ed character from copy and clear it
     <-,+                     Read next character
 ]                            End character reading loop
->[-]<[-]                     Clean the two registers
-++[>+++++<-]>.[-]<           Output \n for eff sake
+
