@@ -88,8 +88,11 @@ int main(int argc, char * argv[]) {
 					break;
 				}
 			case ']': {
+				// We hit the end, so we chose..
+				// We can go back to the beginning of the loop
 				if (memory[pointer]) {
 					iter = loop_register.back();
+				// Or else, we leave the loop, and vacuum the register
 				} else {
 					loop_register.pop_back();
 				}
@@ -112,7 +115,6 @@ int main(int argc, char * argv[]) {
 
 			default: { break;}
 		}
-		//std::cout << *iter << ")=::[" << pointer << "]--{" << (int)(memory[pointer]) << '}' << std::endl;
 	}
 
 	return 0;
