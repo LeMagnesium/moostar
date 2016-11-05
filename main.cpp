@@ -11,8 +11,6 @@
 #include <vector>
 #include <map>
 #include <fstream>
-#include <thread>
-#include <chrono>
 
 #define VERSION 1.1
 
