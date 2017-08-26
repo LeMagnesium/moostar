@@ -11,10 +11,37 @@
 #include <vector>
 #include <map>
 #include <fstream>
+#include <cassert>
+#include <cctype>
+#include <cstring>
 
-#define VERSION 1.1
+#define VERSION 1.2
 
-int main(int argc, char * argv[]) {
+/*int old_main(int argc, char * argv[]) {
+
+}*/
+
+class BFInterpretor {
+	public:
+		BFInterpretor();
+		~BFInterpretor();
+		void process(std::string);
+		void add_function();
+
+		void _check_dead_syntax(std::string&);
+		void _find_function_definitions(std::string&);
+		void _check_function_calls(std::string&);
+		void interpret(std::string&);
+
+	private:
+		std::map<std::string, std::string> function_register;
+		std::map<size_t, uint8_t> memory;
+		std::vector<std::string::iterator> loop_register;
+		size_t memory_pointer, register_pointer;
+};
+
+
+int main(int argc, char ** argv) {
 	if (argc == 1) {
 		// Infos here
 		std::cout << "Moostard BrainFuck Interpreter" << std::endl;
@@ -42,34 +69,152 @@ int main(int argc, char * argv[]) {
 
 	char * buff = new char[length];
 	fptr.read(buff, length);
+	fptr.close();
 	moo += buff;
 	delete[] buff;
 
-	long long brackets = 0;
-	// Here we simply parse the string using i as index and nest ternary operators to modify 'brackets'
-	for (size_t i = 0; i <= length; i++) {
-		brackets += (moo[i] == '[' ? 1 : (moo[i] == ']' ? -1 : 0));
-		if (brackets < 0) {
-			std::cerr << "ERROR : Closing bracket before its opening counterpart" << std::endl;
-			return -1;
-		}
-	}
-
-	if (brackets) {
-		std::cerr << "ERROR : Expected closing bracket" << std::endl;
-		return 1;
-	}
+	BFInterpretor interpretor = BFInterpretor();
+	interpretor.process(moo);
 
 	// Interpretation
-	std::vector<std::string::iterator> loop_register;
-	std::map<size_t, long long> memory; // start with that much
-	size_t pointer = 0;
+	interpretor.interpret(moo);
+	return 0;
+}
+
+void BFInterpretor::process(std::string moo) {
+	this->_check_dead_syntax(moo);
+	this->_find_function_definitions(moo);
+	this->_check_function_calls(moo);
+}
+
+void BFInterpretor::_check_function_calls(std::string& moo) {
+	// #2 : Detect calls
+	for (size_t i = 0; i < moo.length(); i++) {
+		if (moo[i] != '~')
+			continue;
+
+		// Determine name
+		size_t namelength;
+		i++;
+		for (namelength = 0; namelength + i < moo.length(); namelength++) {
+			if (moo[i+namelength] == ';')
+			break;
+		}
+		std::string func_name = moo.substr(i, namelength);
+		assert(this->function_register.count(func_name));
+	}
+}
+
+void BFInterpretor::_find_function_definitions(std::string& moo) {
+	// #1 : Detect definitions
+	for (size_t i = 0; i < moo.length(); i++) {
+		if (moo[i] != '(')
+			continue;
+
+		// Start looking for the end parenthesis and assert the name
+		size_t namelength = 1;
+		for (; namelength + i < moo.length(); namelength++) {
+			char current = moo[namelength+i];
+			if (current == ')')
+				break;
+			assert(isdigit(current) || islower(current) || current == '_');
+		}
+		//std::cout << namelength << " is the namelength\n";
+		std::string func_name = moo.substr(i+1, namelength-1);
+		//std::cout << "Found function header '" << func_name << "'" << std::endl;
+
+		i += namelength + 1;
+		assert(moo[i] == ':' && moo[i+1] == '{');
+		//std::cout << "Found beginning of code string" << std::endl;
+
+		// Now, the code
+		i += 2;
+		size_t codelength = 0;
+		for (; codelength + i < moo.length(); codelength++) {
+			if (moo[i+codelength] == '}')
+				break;
+		}
+		//std::cout << "Codelength is " << codelength << std::endl;
+
+		// Now, store!
+		this->function_register[func_name] = moo.substr(i, codelength);
+	}
+}
+
+
+void BFInterpretor::_check_dead_syntax(std::string& moo) {
+	/*
+		Checking Dead Syntax
+
+	Dead syntax is the colloquial name of syntax determined by [](){} and ~;.
+	Those are purely static and therefore are verified during processing
+	*/
+
+	// Assertions
+	int brackets, parenthesis, curly, calls;
+	brackets = parenthesis = curly = calls = 0;
+	for (size_t i = 0; i < moo.length(); i++) {
+		switch (moo[i]) {
+			case '[': brackets++; break;
+			case ']': brackets--; break;
+			case '(': parenthesis++; break;
+			case ')': parenthesis--; break;
+			case '{': curly++; break;
+			case '}': curly--; break;
+			case '~': calls++; break;
+			case ';': calls--; break;
+			default: break;
+		}
+	}
+	assert(brackets == 0);
+	assert(parenthesis == 0);
+	assert(curly == 0);
+	assert(calls == 0);
+	std::cout << "Brackets and parenthesis assertion \u2713\n";
+}
+
+BFInterpretor::BFInterpretor() {
+	;
+}
+
+BFInterpretor::~BFInterpretor() {
+	;
+}
+
+void BFInterpretor::interpret(std::string& moo) {
+	int silencer = 0;
 	for (std::string::iterator iter = moo.begin(); iter != moo.end(); iter++) {
 		bool unprint = true;
 		switch(*iter) {
+			case '(': { silencer++; break; } // These
+			case '{': { silencer++; break; } // Prevent
+			case ')': { silencer--; break; } // Intepreting
+			case '}': { silencer--; break; } // Functions
+		}
+
+		if (silencer > 0)
+			continue;
+
+		switch(*iter) {
+			case '~': {
+					// Ok. Function call
+					iter++;
+					// Get the name
+					size_t namelength = 0;
+					std::string func_name;
+					while (*iter != ';') {
+						func_name.append(1, *iter);
+						iter++;
+					}
+
+
+					//this->process(this->function_register[func_name]);
+					this->interpret(this->function_register[func_name]);
+					break;
+			}
 			case '[': {
-					if (memory[pointer]) {
-						loop_register.push_back(iter);
+					if (this->memory[this->memory_pointer]) {
+						this->loop_register.push_back(iter);
 					} else {
 						// We have to ignore everything until we find the end
 						iter++;
@@ -81,39 +226,37 @@ int main(int argc, char * argv[]) {
 							}
 						}
 						iter--;
-							
 					}
 					break;
 				}
 			case ']': {
 				// We hit the end, so we chose..
 				// We can go back to the beginning of the loop
-				if (memory[pointer]) {
-					iter = loop_register.back();
+				if (this->memory[this->memory_pointer]) {
+					iter = this->loop_register.back();
 				// Or else, we leave the loop, and vacuum the register
 				} else {
-					loop_register.pop_back();
+					this->loop_register.pop_back();
 				}
 				break;
 			}
 			// Pointer move
-			case '>': { pointer++; break; }
-			case '<': { pointer--; break; }
+			case '>': { this->memory_pointer++; break; }
+			case '<': { this->memory_pointer--; break; }
 			// I/O
-			case '.': { std::cout << (char)(memory[pointer]); break; }
+			case '.': { std::cout << (char)(this->memory[this->memory_pointer]); break; }
 			case ',': {
 					char k = ' ';
 					std::cin.get(k);
-					memory[pointer] = (std::cin.eof() | std::cin.fail() ? memory[pointer] : (int)(k));
+					memory[this->memory_pointer] = (std::cin.eof() | std::cin.fail() ? this->memory[this->memory_pointer] : (int)(k));
 					break;
 				}
 			// Arithmetic
-			case '+': { memory[pointer]++; break; }
-			case '-': { memory[pointer]--; break; }
+			case '+': { this->memory[this->memory_pointer]++; break; }
+			case '-': { this->memory[this->memory_pointer]--; break; }
 
 			default: { break;}
 		}
 	}
 
-	return 0;
 }

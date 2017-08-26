@@ -1,0 +1,8 @@
++-><[].- Standard BrainFuck
+
+(function_name_is_ccase):{code goes here} # Function Definition
+
+~function_name_is_ccase; # Call
+
+^ # Jump to IO registers (NIY)
+v # Jump down to memory register (NIY)
