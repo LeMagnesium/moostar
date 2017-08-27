@@ -6,3 +6,23 @@
 
 ^ # Jump to IO registers (NIY)
 v # Jump down to memory register (NIY)
+
+# Some functions
+
+(power):{
+	>>>+<<[ X to the power of 0 is 1
+		>>~imove; Move P to 1_
+
+		<[->>>+>+<<<<] Move Y to 2_ and 3_
+		>>>>[-<<<<+>>>>] Move 3_ to Y
+		
+
+		<<<~foreach_cpy; Do the multiplication
+		
+		<<- Go back to X and remove one
+		]
+		>>[-<<<+>>>] Move processing to result
+		<~clean; Cleanup
+		<< Go back to R
+}:R:X:Y:0_:1_:2_:3_:
+

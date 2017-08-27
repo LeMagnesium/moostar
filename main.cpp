@@ -101,7 +101,10 @@ void BFInterpretor::_check_function_calls(std::string& moo) {
 			break;
 		}
 		std::string func_name = moo.substr(i, namelength);
-		assert(this->function_register.count(func_name));
+		if (!this->function_register.count(func_name)) {
+			std::cerr << "ASSERTION FAIL on call-check for " << func_name << std::endl;
+			assert(0);
+		}
 	}
 }
 
@@ -170,11 +173,35 @@ void BFInterpretor::_check_dead_syntax(std::string& moo) {
 	assert(parenthesis == 0);
 	assert(curly == 0);
 	assert(calls == 0);
-	std::cout << "Brackets and parenthesis assertion \u2713\n";
 }
 
 BFInterpretor::BFInterpretor() {
-	;
+	this->function_register["sub_5"] = "-----";
+	this->function_register["sub_10"] = "----------";
+	this->function_register["add_5"] = "+++++";
+	this->function_register["add_10"] = "++++++++++";
+	this->function_register["imove"] = "[->+<]";
+	this->function_register["dmove"] = "[-<+>]";
+	this->function_register["clean"] = "[-]";
+
+	std::string scan8;
+	for (size_t i = 0; i < 8; i++)
+		scan8.append(".>");
+	for (size_t i = 0; i < 8; i++)
+		scan8.append("<");
+	this->function_register["scan8"] = scan8;
+	this->function_register["scan16"] = scan8.substr(0,16) + scan8.substr(0,16) + scan8.substr(16,8) + scan8.substr(16,8);
+
+	this->function_register["foreach_cpy"] = ">[>[->+<<<+>>]>[-<+>]<<-]>[-]<<";
+	this->function_register["add"] = ">[-<+>]<"; // :R:X:
+	this->function_register["sub"] = ">[-<->]<"; // :R:Y:
+	this->function_register["mul"] = this->function_register["foreach_cpy"];
+
+	this->function_register["pow"] = ">>>+<<[>>[->+<]<[->>>+>+<<<<]>>>>[-<<<<+>>>>]<<<~foreach_cpy;<<-]>>[-<<<+>>>]<[-]<<";
+	this->function_register["eq"] = "[->-<]+>[<[-]>[-]][-]<";
+	this->function_register["neq"] = "[->-<]>[[-]<+>][-]<}";
+	this->function_register["lt"] = ">[->+<]<[->+<]>+>+>>+<<<[->-[>]<<]>>>[<<[-]<<+>>>]>-<<[-]<[-]<";
+	this->function_register["gt"] = ">[->+<]>>>+<<<<[->+<]>>[-<-[<]>>]>[-<<[-]<]>[-<<<[-]<+>>]<<";
 }
 
 BFInterpretor::~BFInterpretor() {
