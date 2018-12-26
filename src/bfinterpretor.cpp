@@ -88,6 +88,10 @@ void BFInterpretor::_check_dead_syntax(std::string& moo) {
 			case ';': calls--; break;
 			default: break;
 		}
+		assert(brackets >= 0);
+		assert(parenthesis >= 0);
+		assert(curly >= 0);
+		// If any of them is negative, then an open one preceded a closed one
 	}
 	assert(brackets == 0);
 	assert(parenthesis == 0);
@@ -122,6 +126,9 @@ BFInterpretor::BFInterpretor() {
 	this->function_register["neq"] = "[->-<]>[[-]<+>][-]<}";
 	this->function_register["lt"] = ">[->+<]<[->+<]>+>+>>+<<<[->-[>]<<]>>>[<<[-]<<+>>>]>-<<[-]<[-]<";
 	this->function_register["gt"] = ">[->+<]>>>+<<<<[->+<]>>[-<-[<]>>]>[-<<[-]<]>[-<<<[-]<+>>]<<";
+	this->function_register["m@0"] = "^[-]\\";
+
+	this->ioregs[0] = 0;
 }
 
 BFInterpretor::~BFInterpretor() {
@@ -143,6 +150,8 @@ void BFInterpretor::interpret(std::string& moo) {
 			continue;
 
 		switch(*iter) {
+			case '^': { this->pointer_type = true; break; }
+			case '\\': { this->pointer_type = false; break;}
 			case '~': {
 					// Ok. Function call
 					iter++;
@@ -155,12 +164,11 @@ void BFInterpretor::interpret(std::string& moo) {
 					}
 
 
-					//this->process(this->function_register[func_name]);
 					this->interpret(this->function_register[func_name]);
 					break;
 			}
 			case '[': {
-					if (this->memory[this->memory_pointer]) {
+					if (this->getval()) {
 						this->loop_register.push_back(iter);
 					} else {
 						// We have to ignore everything until we find the end
@@ -179,7 +187,7 @@ void BFInterpretor::interpret(std::string& moo) {
 			case ']': {
 				// We hit the end, so we chose..
 				// We can go back to the beginning of the loop
-				if (this->memory[this->memory_pointer]) {
+				if (this->getval()) {
 					iter = this->loop_register.back();
 				// Or else, we leave the loop, and vacuum the register
 				} else {
@@ -188,22 +196,55 @@ void BFInterpretor::interpret(std::string& moo) {
 				break;
 			}
 			// Pointer move
-			case '>': { this->memory_pointer++; break; }
-			case '<': { this->memory_pointer--; break; }
+			case '>': {
+					  if (this->pointer_type)
+						  this->register_pointer++;
+					  else
+						  this->memory_pointer++;
+					  break; }
+			case '<': {
+					  if (this->pointer_type)
+						  this->register_pointer--;
+					  else
+						  this->memory_pointer--;
+					  break; }
 			// I/O
-			case '.': { std::cout << (char)(this->memory[this->memory_pointer]); break; }
+			case '.': { std::cout << (char)(this->getval()); break; }
 			case ',': {
 					char k = ' ';
 					std::cin.get(k);
-					memory[this->memory_pointer] = (std::cin.eof() | std::cin.fail() ? this->memory[this->memory_pointer] : (int)(k));
+					this->setval((std::cin.eof() | std::cin.fail() ? this->getval() : (int)(k)));
 					break;
 				}
 			// Arithmetic
-			case '+': { this->memory[this->memory_pointer]++; break; }
-			case '-': { this->memory[this->memory_pointer]--; break; }
+			case '+': { this->setval(this->getval()+1); break; }
+			case '-': { this->setval(this->getval()-1); break; }
 
 			default: { break;}
 		}
+		this->_update_registers();
 	}
 
+}
+
+uint8_t BFInterpretor::getval() {
+	return (this->pointer_type?this->ioregs[this->register_pointer]:this->memory[this->memory_pointer]);
+}
+
+void BFInterpretor::setval(uint8_t val) {
+	if (this->pointer_type) {
+		this->ioregs[this->register_pointer] = val;
+	} else {
+		this->memory[this->memory_pointer] = val;
+	}
+}
+
+void BFInterpretor::_update_registers() {
+	// Reg 0 : Memory pointer address
+	// If we're in regular pointer mode, reg0 is updated to any memory pointer change
+	if (!this->pointer_type)
+		this->ioregs[0] = this->memory_pointer;
+	// Otherwise we update the memory pointer itself from modifications made to reg0
+	else
+		this->memory_pointer = this->ioregs[0];
 }

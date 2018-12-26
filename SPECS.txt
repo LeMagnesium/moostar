@@ -4,8 +4,9 @@
 
 ~function_name_is_ccase; # Call
 
-^ # Jump to IO registers (NIY)
-v # Jump down to memory register (NIY)
+^ # Jump to meta registers
+\ # Jump down to memory registers
+
 
 # Some functions
 
@@ -26,3 +27,7 @@ v # Jump down to memory register (NIY)
 		<< Go back to R
 }:R:X:Y:0_:1_:2_:3_:
 
+# Meta Registers
+[mpos][(soon to follow)]
+
+ - [mpos] : Memory Position of the cursor on the Memory Ribbon
