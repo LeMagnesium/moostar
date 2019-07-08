@@ -1,6 +1,6 @@
 /*\
  *
- * Moostard BrainFuck Interpreter
+ * Moostar BrainFuck Interpreter
  * By Lymkwi/LeMagnesium
  * License : CC0
  *
@@ -18,7 +18,7 @@
 int main(int argc, char ** argv) {
 	if (argc == 1) {
 		// Infos here
-		std::cout << "Moostard BrainFuck Interpreter" << std::endl;
+		std::cout << "Moostar BrainFuck Interpreter" << std::endl;
 		std::cout << "By Lymkwi | Version " << VERSION << std::endl;
 		std::cout << "Compiled on the " << __DATE__ << " at " << __TIME__ << std::endl;
 		std::cout << "Compiling standard : " << __cplusplus << std::endl;
@@ -54,4 +54,5 @@ int main(int argc, char ** argv) {
 	interpretor.interpret(moo);
 	return 0;
 }
+
 

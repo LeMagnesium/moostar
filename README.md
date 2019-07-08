@@ -1,7 +1,7 @@
-BrainFuck Interpreter Writter in C++
+Flavoured BrainFuck Interpreter Writter in C++
 ====================================
 
-Moostard, ßÿ Lymkwi/LeMagnesium
+Moostar, ßÿ Lymkwi/LeMagnesium
 License: CC0
 
 # Specifications
